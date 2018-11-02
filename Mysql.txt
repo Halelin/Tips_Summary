@@ -1,0 +1,19 @@
+1.建表
+create table userAddress( 
+		id int primary key auto_increment, 
+		openId varchar(50) not null,
+		isDefault boolean, name varchar(10),
+		phoneNum varchar(11), 
+		address varchar(30), 
+		mailCode varchar(6), 
+		province varchar(10),
+		city varchar(10), 
+		district varchar(10),
+		createTime timestamp,
+		editTime timestamp );
+2.插入
+insert into userAddress values (
+		null,12,1,'sf','11111111111',
+		'ds','123456','asdfasdf','asdfdfd',
+		'sdf',now(),now());
+3.desc useraddress 
