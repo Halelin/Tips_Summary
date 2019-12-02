@@ -1,0 +1,33 @@
+(:导入xml:)
+xquery version "1.0-ml";
+(: ライブラリの登録 :)
+(: DatabaseをモジュールのＤＢにして実行すること :)
+import module namespace cvt = "http://marklogic.com/cpf/convert"  at "/MarkLogic/conversion/convert.xqy";
+
+declare variable $LOCAL-BASE-DIR as xs:string := "D:/projectFile/marklogic/测试xml";(: セパレータは/にしてください :)
+declare variable $ML-BASE-DIR as xs:string := "";
+declare variable $SPAWN-OPT := <options xmlns="xdmp:eval"><transaction-mode>update-auto-commit</transaction-mode><result>{fn:true()}</result></options>;
+
+
+declare function local:insert-doc(
+  $dir-path as xs:string
+) {
+  for $entry in xdmp:filesystem-directory($dir-path)/dir:entry
+  return
+  if ($entry/dir:type/text()="directory")
+    then local:insert-doc($entry/dir:pathname/text())
+    else (
+      let $insert-path := fn:replace(fn:replace($entry/dir:pathname/text(),"//","/"), fn:replace($LOCAL-BASE-DIR,"//","/"), $ML-BASE-DIR)
+      let $_ := xdmp:document-insert($insert-path, xdmp:document-get($entry/dir:pathname/text()), ())
+      return $insert-path
+    )
+};
+let $cnt := xdmp:spawn-function(
+           function() {
+             for $uri in cts:uri-match("/*")
+             return xdmp:document-delete($uri),1
+           },$SPAWN-OPT
+         )
+let $dummy := $cnt+1
+let $result := local:insert-doc($LOCAL-BASE-DIR)
+return $result

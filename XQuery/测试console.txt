@@ -1,0 +1,146 @@
+==========================================================(:导出xml:)======================================================================================================================================================
+(:导出xml:)
+xquery version "1.0-ml";
+(: ----------------------------------------------------------------------
+:: ライブラリ名:データダンプ
+:: 内容        :MLから参照できるローカルディレクトリに、抽出結果をXMLファイル出力します
+:: ---------------------------------------------------------------------- :)
+import module namespace cvt = "http://marklogic.com/cpf/convert" at "/MarkLogic/conversion/convert.xqy";
+(: ------------------------------------------------------------------ :)
+declare variable $LOCAL-BASE-DIR  := "D:/projectFile/marklogic/测试xml备份/备份";(: ローカル出力先ベースディレクトリ・・・ベースディレクトリは削除→作成となります :)
+declare variable $ML-DIR := cts:query(());(: 抽出クエリ 全ての時は cts:query(()) :)
+(: ------------------------------------------------------------------ :)
+declare variable $SAVE-XML-OPT := <options xmlns="xdmp:save"><indent-untyped>yes</indent-untyped><indent-tabs>yes</indent-tabs></options>;
+declare variable $CREATE-DIR-OPT := <options xmlns="xdmp:filesystem-directory-create"><create-parents>true</create-parents></options>;
+
+(: メイン :)
+let $delete-dir := xdmp:filesystem-directory-delete($LOCAL-BASE-DIR||"/")
+let $create-dir := xdmp:filesystem-directory-create($LOCAL-BASE-DIR||"/",$CREATE-DIR-OPT) 
+
+for $doc in cts:search(doc(),$ML-DIR)
+  let $save-path := cvt:basepath($LOCAL-BASE-DIR||fn:document-uri($doc))
+  let $_ := if (xdmp:filesystem-file-exists($save-path))
+            then ()
+            else (xdmp:filesystem-directory-create($save-path||"/",$CREATE-DIR-OPT))
+return xdmp:save($LOCAL-BASE-DIR||fn:document-uri($doc),$doc,$SAVE-XML-OPT)
+
+============================================================(:导入xml:)=============================================================================================================================================================
+(:导入xml:)
+xquery version "1.0-ml";
+(: ライブラリの登録 :)
+(: DatabaseをモジュールのＤＢにして実行すること :)
+import module namespace cvt = "http://marklogic.com/cpf/convert"  at "/MarkLogic/conversion/convert.xqy";
+
+declare variable $LOCAL-BASE-DIR as xs:string := "D:/projectFile/marklogic/测试xml";(: セパレータは/にしてください :)
+declare variable $ML-BASE-DIR as xs:string := "";
+declare variable $SPAWN-OPT := <options xmlns="xdmp:eval"><transaction-mode>update-auto-commit</transaction-mode><result>{fn:true()}</result></options>;
+
+
+declare function local:insert-doc(
+  $dir-path as xs:string
+) {
+  for $entry in xdmp:filesystem-directory($dir-path)/dir:entry
+  return
+  if ($entry/dir:type/text()="directory")
+    then local:insert-doc($entry/dir:pathname/text())
+    else (
+      let $insert-path := fn:replace(fn:replace($entry/dir:pathname/text(),"//","/"), fn:replace($LOCAL-BASE-DIR,"//","/"), $ML-BASE-DIR)
+      let $_ := xdmp:document-insert($insert-path, xdmp:document-get($entry/dir:pathname/text()), ())
+      return $insert-path
+    )
+};
+let $cnt := xdmp:spawn-function(
+           function() {
+             for $uri in cts:uri-match("/*")
+             return xdmp:document-delete($uri),1
+           },$SPAWN-OPT
+         )
+let $dummy := $cnt+1
+let $result := local:insert-doc($LOCAL-BASE-DIR)
+return $result
+
+===========================================================(:导入module:)============================================================================================================================================================
+(:导入module:)
+xquery version "1.0-ml";
+(: ライブラリの登録 :)
+(: DatabaseをモジュールのＤＢにして実行すること :)
+import module namespace cvt = "http://marklogic.com/cpf/convert"  at "/MarkLogic/conversion/convert.xqy";
+
+declare variable $LOCAL-BASE-DIR as xs:string := "D:/projectFile/marklogic/MODULE_QUERY/lib";(: セパレータは/にしてください :)
+declare variable $ML-BASE-DIR as xs:string := "/lib";
+declare variable $SPAWN-OPT := <options xmlns="xdmp:eval"><transaction-mode>update-auto-commit</transaction-mode><result>{fn:true()}</result></options>;
+
+declare variable $PERMISSONS-ALL as node()* :=
+	(
+(:
+	xdmp:permission("murata-admin", "read"),
+	xdmp:permission("murata-admin", "update"),
+	xdmp:permission("murata-engineer", "read"),
+	xdmp:permission("murata-engineer", "update"),
+	xdmp:permission("murata-operator", "read"),
+	xdmp:permission("murata-operator", "update"),
+	xdmp:permission("murata-guest-engineer", "read"),
+	xdmp:permission("murata-guest-engineer", "update"),
+	xdmp:permission("murata-guest", "read"),
+	xdmp:permission("murata-guest", "update"),
+	xdmp:permission("murata-math-analysis", "read"),
+	xdmp:permission("murata-math-analysis", "update"),
+	xdmp:permission("murata-master-admin", "read"),
+	xdmp:permission("murata-master-admin", "update"),
+	xdmp:permission("murata-batch", "read"),
+	xdmp:permission("murata-batch", "update"),
+	xdmp:permission("murata-web-login", "read"),
+	xdmp:permission("murata-web-login", "update"),
+:)
+	()
+	);
+
+declare function local:insert-doc(
+  $dir-path as xs:string
+) {
+  for $entry in xdmp:filesystem-directory($dir-path)/dir:entry
+  return
+  if ($entry/dir:type/text()="directory")
+    then local:insert-doc($entry/dir:pathname/text())
+    else (
+      let $insert-path := fn:replace(fn:replace($entry/dir:pathname/text(),"//","/"), fn:replace($LOCAL-BASE-DIR,"//","/"), $ML-BASE-DIR)
+      let $_ := xdmp:document-insert($insert-path, xdmp:document-get($entry/dir:pathname/text()), ())
+      return $insert-path
+    )
+};
+let $cnt := xdmp:spawn-function(
+           function() {
+             for $uri in cts:uri-match("/*")
+             return xdmp:document-delete($uri),1
+           },$SPAWN-OPT
+         )
+let $dummy := $cnt+1
+let $result := local:insert-doc($LOCAL-BASE-DIR)
+return $result
+
+========================================================== (:插入用户:)=======================================================================================================================================================
+ (:插入用户:)
+ xquery version "1.0-ml";
+declare namespace html = "http://www.w3.org/1999/xhtml";
+xdmp:document-insert("/resource_part/user/admin.xml",
+<envelope xmlns:sem="http://marklogic.com/semantics" xmlns:wrctl="http://www.murata.com/webrider/control" xmlns="http://www.murata.com/webrider/resource_part/user">
+<instance>
+<user_id>admin</user_id>
+<user_name>s</user_name>
+<mail_address>123@test</mail_address>
+<organization>sdf</organization>
+<role_name>システム管理者</role_name>
+</instance>
+<wrctl:headers>
+<wrctl:document_type>ユーザーマスター</wrctl:document_type>
+<wrctl:create_user_id>U00007A</wrctl:create_user_id>
+<wrctl:create_datetime>2019-08-20 14:03:33</wrctl:create_datetime>
+<wrctl:update_user_id>U00007A</wrctl:update_user_id>
+<wrctl:update_datetime>2019-08-20 14:03:33</wrctl:update_datetime>
+</wrctl:headers>
+<sem:triples>
+</sem:triples>
+</envelope>,
+xdmp:default-permissions(),
+xdmp:default-collections()
+)

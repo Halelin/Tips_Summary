@@ -1,0 +1,4 @@
+cd D:\Oracle\Middleware\wlserver_10.3\server\bin
+d:
+setWLSEnv.cmd
+java weblogic.Deployer -adminurl http://127.0.0.1:7001 -user myserver -password weblogic1 -redeploy -source C:\Users\111\Desktop\war\test-cqis_withoutHtml.war -name JR-CQRS -targets myserver

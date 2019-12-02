@@ -1,0 +1,535 @@
+xquery version "1.0-ml";
+declare namespace html = "http://www.w3.org/1999/xhtml";
+xdmp:document-insert("/triples.xml",
+<sem:triples xmlns:sem="http://marklogic.com/semantics">
+ <sem:triple>
+  <sem:subject>http://example.org/dir/js</sem:subject>
+  <sem:predicate>http://xmlns.com/foaf/0.1/firstname</sem:predicate>
+  <sem:object datatype="http://www.w3.org/2001/XMLSchema#string">John
+  </sem:object>
+ </sem:triple>
+ <sem:triple>
+  <sem:subject>http://example.org/dir/js</sem:subject>
+  <sem:predicate>http://xmlns.com/foaf/0.1/lastname</sem:predicate> 
+  <sem:object datatype="http://www.w3.org/2001/XMLSchema#string">
+      Smith</sem:object>
+ </sem:triple>
+ <sem:triple>
+  <sem:subject>http://example.org/dir/js</sem:subject>
+  <sem:predicate>http://xmlns.com/foaf/0.1/knows</sem:predicate> 
+  <sem:object datatype="http://www.w3.org/2001/XMLSchema#string">
+      Jane Smith</sem:object>
+ </sem:triple>
+</sem:triples>,
+xdmp:default-permissions(),
+xdmp:default-collections()
+)
+
+url编码：（utf8报错时需要编码）
+let $url := xdmp:url-encode("ldap://10.90.3.250:389")
+return $url
+
+fn:encode-for-uri("ldap://10.90.3.250:389")
+
+ldap用户查找：
+xdmp:ldap-search(
+  "(cn=Administrator)",
+   <options xmlns="xdmp:ldap">
+      <username>Administrator</username>
+      <password>win771229zlZLL</password>
+      <server-uri>ldap://10.90.3.250:389</server-uri>
+      <search-base>CN=Users,DC=AD,DC=COM</search-base>
+      <bind-method>simple</bind-method>
+ </options>)
+ 
+  xdmp:ldap-lookup("CN=ZL,CN=Users,DC=AD,DC=COM",
+ <options xmlns="xdmp:ldap">
+      <username>Administrator@AD.COM</username>
+      <password>win771229zlZLL</password>
+      <server-uri>xdmp:url-encode("ldap://10.90.3.250:389")</server-uri>
+ </options>)
+ 
+ 
+插入xml文件：
+declareUpdate();
+xdmp.documentLoad('D:\\projectFile\\marklogic\\生成xml\\sample_eventlog.xml', {'uri':'/resource_part/eventlog/log01',permissions : xdmp.defaultPermissions(),format:'xml'})
+ 
+ 
+ 建admin 用户
+ xquery version "1.0-ml";
+declare namespace html = "http://www.w3.org/1999/xhtml";
+xdmp:document-insert("/resource_part/user/admin",
+<envelope xmlns:sem="http://marklogic.com/semantics" xmlns:wrctl="http://www.murata.com/webrider/control" xmlns="http://www.murata.com/webrider/resource_part/user">
+<instance>
+<user_id>admin</user_id>
+<user_name>s</user_name>
+<mail_address>123@test</mail_address>
+<organization>sdf</organization>
+<role_name>システム管理者</role_name>
+</instance>
+<wrctl:headers>
+<wrctl:document_type>ユーザーマスター</wrctl:document_type>
+<wrctl:create_user_id>U00007A</wrctl:create_user_id>
+<wrctl:create_datetime>2019-08-20 14:03:33</wrctl:create_datetime>
+<wrctl:update_user_id>U00007A</wrctl:update_user_id>
+<wrctl:update_datetime>2019-08-20 14:03:33</wrctl:update_datetime>
+</wrctl:headers>
+<sem:triples>
+</sem:triples>
+</envelope>,
+xdmp:default-permissions(),
+xdmp:default-collections()
+)
+
+======================================================================插入module xqy==============================================================================================================
+xquery version "1.0-ml";
+(: ライブラリの登録 :)
+(: DatabaseをモジュールのＤＢにして実行すること :)
+import module namespace cvt = "http://marklogic.com/cpf/convert"  at "/MarkLogic/conversion/convert.xqy";
+
+declare variable $LOCAL-BASE-DIR as xs:string := "D:/projectFile/marklogic/murata-smalab2020/trunk/600_単体試験/99_検証ツール/クエリ/src/lib";(: セパレータは/にしてください :)
+declare variable $ML-BASE-DIR as xs:string := "/lib";
+declare variable $SPAWN-OPT := <options xmlns="xdmp:eval"><transaction-mode>update-auto-commit</transaction-mode><result>{fn:true()}</result></options>;
+
+declare variable $PERMISSONS-ALL as node()* :=
+	(
+(:
+	xdmp:permission("murata-admin", "read"),
+	xdmp:permission("murata-admin", "update"),
+	xdmp:permission("murata-engineer", "read"),
+	xdmp:permission("murata-engineer", "update"),
+	xdmp:permission("murata-operator", "read"),
+	xdmp:permission("murata-operator", "update"),
+	xdmp:permission("murata-guest-engineer", "read"),
+	xdmp:permission("murata-guest-engineer", "update"),
+	xdmp:permission("murata-guest", "read"),
+	xdmp:permission("murata-guest", "update"),
+	xdmp:permission("murata-math-analysis", "read"),
+	xdmp:permission("murata-math-analysis", "update"),
+	xdmp:permission("murata-master-admin", "read"),
+	xdmp:permission("murata-master-admin", "update"),
+	xdmp:permission("murata-batch", "read"),
+	xdmp:permission("murata-batch", "update"),
+	xdmp:permission("murata-web-login", "read"),
+	xdmp:permission("murata-web-login", "update"),
+:)
+	()
+	);
+
+
+declare function local:insert-doc(
+  $dir-path as xs:string
+) {
+  for $entry in xdmp:filesystem-directory($dir-path)/dir:entry
+  return
+  if ($entry/dir:type/text()="directory")
+    then local:insert-doc($entry/dir:pathname/text())
+    else (
+      let $insert-path := fn:replace(fn:replace($entry/dir:pathname/text(),"//","/"), fn:replace($LOCAL-BASE-DIR,"//","/"), $ML-BASE-DIR)
+      let $_ := xdmp:document-insert($insert-path, xdmp:document-get($entry/dir:pathname/text()), ())
+      return $insert-path
+    )
+};
+let $cnt := xdmp:spawn-function(
+           function() {
+             for $uri in cts:uri-match("/*")
+             return xdmp:document-delete($uri),1
+           },$SPAWN-OPT
+         )
+let $dummy := $cnt+1
+let $result := local:insert-doc($LOCAL-BASE-DIR)
+return $result
+
+=========================================================================插入module xqy===========================================================================================================
+xquery version "1.0-ml";
+(: ライブラリの登録 :)
+(: DatabaseをモジュールのＤＢにして実行すること :)
+import module namespace cvt = "http://marklogic.com/cpf/convert"  at "/MarkLogic/conversion/convert.xqy";
+
+declare variable $LOCAL-BASE-DIR as xs:string := "D:/projectFile/marklogic/murata-smalab2020/trunk/500.製造/ライブラリクエリ/lib";(: セパレータは/にしてください :)
+declare variable $ML-BASE-DIR as xs:string := "/lib";
+declare variable $SPAWN-OPT := <options xmlns="xdmp:eval"><transaction-mode>update-auto-commit</transaction-mode><result>{fn:true()}</result></options>;
+
+declare variable $PERMISSONS-ALL as node()* :=
+	(
+(:
+	xdmp:permission("murata-admin", "read"),
+	xdmp:permission("murata-admin", "update"),
+	xdmp:permission("murata-engineer", "read"),
+	xdmp:permission("murata-engineer", "update"),
+	xdmp:permission("murata-operator", "read"),
+	xdmp:permission("murata-operator", "update"),
+	xdmp:permission("murata-guest-engineer", "read"),
+	xdmp:permission("murata-guest-engineer", "update"),
+	xdmp:permission("murata-guest", "read"),
+	xdmp:permission("murata-guest", "update"),
+	xdmp:permission("murata-math-analysis", "read"),
+	xdmp:permission("murata-math-analysis", "update"),
+	xdmp:permission("murata-master-admin", "read"),
+	xdmp:permission("murata-master-admin", "update"),
+	xdmp:permission("murata-batch", "read"),
+	xdmp:permission("murata-batch", "update"),
+	xdmp:permission("murata-web-login", "read"),
+	xdmp:permission("murata-web-login", "update"),
+:)
+	()
+	);
+
+
+declare function local:insert-doc(
+  $dir-path as xs:string
+) {
+  for $entry in xdmp:filesystem-directory($dir-path)/dir:entry
+  return
+  if ($entry/dir:type/text()="directory")
+    then local:insert-doc($entry/dir:pathname/text())
+    else (
+      let $insert-path := fn:replace(fn:replace($entry/dir:pathname/text(),"//","/"), fn:replace($LOCAL-BASE-DIR,"//","/"), $ML-BASE-DIR)
+      let $_ := xdmp:document-insert($insert-path, xdmp:document-get($entry/dir:pathname/text()), ())
+      return $insert-path
+    )
+};
+let $cnt := xdmp:spawn-function(
+           function() {
+             for $uri in cts:uri-match("/*")
+             return xdmp:document-delete($uri),1
+           },$SPAWN-OPT
+         )
+let $dummy := $cnt+1
+let $result := local:insert-doc($LOCAL-BASE-DIR)
+return $result
+============================================================================输出数据库xml========================================================================================================
+xquery version "1.0-ml";
+(: ----------------------------------------------------------------------
+:: ライブラリ名:データダンプ
+:: 内容        :MLから参照できるローカルディレクトリに、抽出結果をXMLファイル出力します
+:: ---------------------------------------------------------------------- :)
+import module namespace cvt = "http://marklogic.com/cpf/convert" at "/MarkLogic/conversion/convert.xqy";
+(: ------------------------------------------------------------------ :)
+declare variable $LOCAL-BASE-DIR  := "D:/projectFile/marklogic/生成xml";(: ローカル出力先ベースディレクトリ・・・ベースディレクトリは削除→作成となります :)
+declare variable $ML-DIR := cts:query(());(: 抽出クエリ 全ての時は cts:query(()) :)
+(: ------------------------------------------------------------------ :)
+declare variable $SAVE-XML-OPT := <options xmlns="xdmp:save"><indent-untyped>yes</indent-untyped><indent-tabs>yes</indent-tabs></options>;
+declare variable $CREATE-DIR-OPT := <options xmlns="xdmp:filesystem-directory-create"><create-parents>true</create-parents></options>;
+
+(: メイン :)
+let $delete-dir := xdmp:filesystem-directory-delete($LOCAL-BASE-DIR||"/")
+let $create-dir := xdmp:filesystem-directory-create($LOCAL-BASE-DIR||"/",$CREATE-DIR-OPT) 
+
+for $doc in cts:search(doc(),$ML-DIR)
+  let $save-path := cvt:basepath($LOCAL-BASE-DIR||fn:document-uri($doc))
+  let $_ := if (xdmp:filesystem-file-exists($save-path))
+            then ()
+            else (xdmp:filesystem-directory-create($save-path||"/",$CREATE-DIR-OPT))
+return xdmp:save($LOCAL-BASE-DIR||fn:document-uri($doc),$doc,$SAVE-XML-OPT)
+
+===========================================================================添加用户=========================================================================================================
+ xquery version "1.0-ml";
+declare namespace html = "http://www.w3.org/1999/xhtml";
+xdmp:document-insert("/resource_part/user/admin.xml",
+<envelope xmlns:sem="http://marklogic.com/semantics" xmlns:wrctl="http://www.murata.com/webrider/control" xmlns="http://www.murata.com/webrider/resource_part/user">
+<instance>
+<user_id>admin</user_id>
+<user_name>s</user_name>
+<mail_address>123@test</mail_address>
+<organization>sdf</organization>
+<role_name>システム管理者</role_name>
+</instance>
+<wrctl:headers>
+<wrctl:document_type>ユーザーマスター</wrctl:document_type>
+<wrctl:create_user_id>U00007A</wrctl:create_user_id>
+<wrctl:create_datetime>2019-08-20 14:03:33</wrctl:create_datetime>
+<wrctl:update_user_id>U00007A</wrctl:update_user_id>
+<wrctl:update_datetime>2019-08-20 14:03:33</wrctl:update_datetime>
+</wrctl:headers>
+<sem:triples>
+</sem:triples>
+</envelope>,
+xdmp:default-permissions(),
+xdmp:default-collections()
+)
+
+============================================================按照路径和内容查询========================================================================================================================
+xquery version "1.0-ml";
+let $query := cts:word-query("20190916120133503")
+let $result := cts:search(doc(), cts:and-query((cts:directory-query('/resource_part/process_group/'), $query)))
+return $result
+===========================================================temp========================================================================================================================
+
+xquery version "1.0-ml";
+import module namespace sem = "http://marklogic.com/semantics" at "/MarkLogic/semantics.xqy";
+let $result :=
+      sem:sparql('
+PREFIX dcterms:<http://purl.org/dc/terms/>
+PREFIX  experiment:<http://www.murata.com/webrider/resource_part/experiment/>
+PREFIX   process:<http://www.murata.com/webrider/resource_part/process/>
+PREFIX cts: <http://marklogic.com/cts#>
+PREFIX ctq:<http://www.murata.com/webrider/resource_part/process/>
+
+SELECT ?from ?to
+ where{
+  ctq:20190916103653173_0 dcterms:isPartOf   ?to 
+                    }
+      ')
+for $from-to in $result
+let $x :=  element networkData {
+element from { 
+element id {map:get($from-to, "from")} , 
+element label {let $ss := 'daf'
+return $ss}}, 
+element to {map:get($from-to, "to")
+}}
+return $x
+===========================================================更新节点========================================================================================================================
+declare namespace process-group="http://www.murata.com/webrider/resource_part/process_group";
+xdmp:node-replace(
+   doc("/resource_part/process_group/20190917101624647.xml")/process-group:envelope/process-group:instance/process-group:bookName,
+  <bookName xmlns="http://www.murata.com/webrider/resource_part/process_group">Java编程思想第9版</bookName> 
+)
+===========================================================插入子节点========================================================================================================================
+xdmp:node-insert-child(
+doc("/resource_part/process_group/20190917101624647.xml")/process-group:envelope/process-group:instance/process-group:bookName,
+<bookName2 xmlns="http://www.murata.com/webrider/resource_part/process_group">sss</bookName2> 
+)
+===========================================================插入节点前一个兄弟节点========================================================================================================================
+
+declare namespace process-group="http://www.murata.com/webrider/resource_part/process_group";
+xdmp:node-insert-before(
+  doc("/resource_part/process_group/20190917101624647.xml")/process-group:envelope/process-group:instance/process-group:bookName,
+  <bookName3 xmlns="http://www.murata.com/webrider/resource_part/process_group">sss</bookName3> 
+)
+===========================================================插入节点后一个兄弟节点========================================================================================================================
+declare namespace process-group="http://www.murata.com/webrider/resource_part/process_group";
+xdmp:node-insert-after(
+  doc("/resource_part/process_group/20190917101624647.xml")/process-group:envelope/process-group:instance/process-group:bookName3,
+  <bookName4 xmlns="http://www.murata.com/webrider/resource_part/process_group">888</bookName4> 
+)
+
+===========================================================插入文档========================================================================================================================
+xquery version "1.0-ml";
+(: ----------------------------------------------------------------------
+:: ライブラリ名:ログインクエリ
+:: 内容        :LDAPのユーザーを検索し、結果を返す
+:: ---------------------------------------------------------------------- :)
+module namespace BD030-network = "http://www.murata.com/webrider/resource_part/lib/BD030/network";
+import module namespace cvt = "http://marklogic.com/cpf/convert" at "/MarkLogic/conversion/convert.xqy";
+import module namespace wr-common = "http://www.murata.com/webrider/resource_part/lib/common/common" at "/lib/resource_part/common/common.xqy";
+(: ----------------------------------------------------------------------
+:: 機能名:ログイン
+:: 内容  :ADより、ユーザー情報を取得する
+:: ----------------------------------------------------------------------
+:: パラメータ:
+::   $user_id：社員番号
+::   $password:パスワード
+:: リターン:
+::   氏名（英語）、組織コード、メールアドレス
+:: ---------------------------------------------------------------------- :)
+declare function BD030-network:execute (
+ $doc as node()
+)
+{
+  try {
+ 
+let $_ := xdmp:document-insert("/resource_part/process_group/20190917101624647.xml",
+ $doc,
+wr-common:get-permissions("実験対象")
+)
+return "success"
+  } catch ($exception) {
+    xdmp:log($exception, "info")
+  }, ()
+};
+===========================================================字符串拼接========================================================================================================================
+declare namespace process-group="http://www.murata.com/webrider/resource_part/process_group";
+let $x := "20190917101624647.xml"
+return fn:doc("/resource_part/process_group/"||$x)
+==========================================================全文匹配========================================================================================================================
+declare namespace process-group="http://www.murata.com/webrider/resource_part/process_group";
+let $x := "20190917101624647.xml"
+return cts:search(doc(),cts:element-value-query(xs:QName("process-group:bookName3"),"sss 123"))
+
+==========================================================单词匹配========================================================================================================================
+declare namespace process-group="http://www.murata.com/webrider/resource_part/process_group";
+let $x := "20190917101624647.xml"
+return cts:search(doc(),cts:element-word-query(xs:QName("process-group:bookName3"),"sss 123"))
+
+==========================================================将字符串转换为节点======MarkLogic解决方案：==================================================================================================================
+xdmp:unquote($string).
+
+==========================================================将节点转换为字符串======MarkLogic解决方案：==================================================================================================================
+xdmp:quote($node)
+
+==========================================================将节点转换为字符串======通用解决方案：==================================================================================================================
+fn:string($node)
+
+=============================================================================================================================================================================================================================
+
+   let $sparql-str := switch ($schema)
+    case "process"
+    return "process"
+    case "category"
+    return "category"
+    default return ()
+=============================================================字符串拆分=============================================================================================================================================================
+fn:tokenize("http://www.murata.com/webrider/resource_part/experiment/12345", "/")[last()]
+
+=============================================================插入表=============================================================================================================================================================
+xdmp:document-insert($schema,xdmp:unquote($doc),wr-common:get-permissions("プロセス"))
+
+=============================================================传入字符串更新xml片段=====================================================================================================================================================
+xquery version "1.0-ml";
+(: ----------------------------------------------------------------------
+:: ライブラリ名: BD030
+:: 内容        :ネットワーク図
+:: ---------------------------------------------------------------------- :)
+
+module namespace BD030-network = "http://www.murata.com/webrider/resource_part/lib/BD030/network";
+
+import module namespace cvt = "http://marklogic.com/cpf/convert" at "/MarkLogic/conversion/convert.xqy";
+import module namespace wr-common = "http://www.murata.com/webrider/resource_part/lib/common/common" at "/lib/resource_part/common/common.xqy";
+
+declare namespace category = "http://www.murata.com/webrider/resource_part/category";
+declare namespace category-group = "http://www.murata.com/webrider/resource_part/category_group";
+declare namespace process = "http://www.murata.com/webrider/resource_part/process";
+declare namespace process-group = "http://www.murata.com/webrider/resource_part/process_group";
+
+(: ----------------------------------------------------------------------
+:: 機能名:ファイルを追加
+:: 内容  :ファイルを追加
+:: ----------------------------------------------------------------------
+:: パラメータ:
+::   $schema：スキーマ
+::   $doc:ファイル
+:: リターン:
+::   
+:: ---------------------------------------------------------------------- :)
+declare function BD030-network:fileUpload (
+	$schema as xs:string,
+	$doc as xs:string
+)
+{
+	try {
+			let $_ :=	xdmp:node-replace(
+					doc($schema)/process-group:envelope/process-group:instance/process-group:attachment_file_information,
+					xdmp:unquote($doc)/process-group:attachment_file_information
+					)
+					return "sd"
+	} catch ($exception) {
+		xdmp:log($exception, "info")
+	}, ()
+};
+
+=============================================================js 单个xml导入=====================================================================================================================================================
+
+declareUpdate();
+xdmp.documentLoad('D:\\projectFile\\marklogic\\test\\testSchema\\processgroup2222.xml', 
+                  {'uri':'/resource_part/process_group/processgroup2222.xml',permissions : xdmp.defaultPermissions(),format:'xml'})
+
+=============================================================找到节点名的路径，包括同一层的同名节点数b[total]=====================================================================================================================================================
+	let $arg := 
+	<a>
+	<b>
+	<c>ccc</c>
+	<d>ccc</d>
+	</b>
+	<b>bbb<f>x</f></b></a>
+	return xdmp:path($arg/b)
+	
+============================================================根据上下文找到node内容====================================================================================================================================================
+xquery version "1.0-ml";
+
+xdmp:document-insert("/test.xml",
+ <root>
+   <step1>this is step1</step1>
+   <step2>this is step2</step2>
+ </root>)
+;
+
+(:
+use xdmp:value to dynamically specify a step
+in an XPath expression
+:)
+for $x in ("step1", "step2")
+return /root/xdmp:value($x)
+============================================================根据节点顺序查找element====================================================================================================================================================
+
+let $id := 'C000007_1'
+let $c := fn:doc("/resource_part/category/" || $id || ".xml")
+return $c/element()[1]/element()[1]
+============================================================* 拆分同一级element获得element集合====================================================================================================================================================
+
+let $id := 'C000007_1'
+let $c := fn:doc("/resource_part/category/" || $id || ".xml")/category:envelope/category:instance/category:template_items
+return $c/*
+
+例子： 拆分三个层次的element,
+let $id := 'C000007_1'
+let $c := fn:doc("/resource_part/category/" || $id || ".xml")/category:envelope/category:instance/category:template_items
+let $es := $c/*
+let $e1 := $c/*
+let $e2 := $es/element()
+let $e3 := $es/element()/element()
+return $e1
+============================================================获得元素属性名:不填属性名默认取回所有的属性内容，填了属性名就返回属性名====================================================================================================================================================
+return $elem/attribute(type)
+
+/@* 返回所有属性
+找到type = 'design' 或 type = 'measurement' 的元素
+if($t/attribute(type) = 'design' or $t/attribute(type) = 'measurement') 
+
+============================================================按照路径和节点名查找文档====================================================================================================================================================
+
+let $r :=   cts:search(fn:doc(),cts:element-value-query(xs:QName("category:experiment_target_id")))
+    let $result-category := 
+        cts:search(fn:doc(), cts:and-query((
+            cts:directory-query('/resource_part/category/'), 
+            cts:element-value-query(xs:QName("category:solvent-compound_common_name_ja")))))
+
+
+return   $result-category
+============================================================叶子节点即是子节点个数为零的节点====================================================================================================================================================
+所有叶子节点：
+return   $c//*[fn:count(*) eq 0]
+===========================================================将叶子节点和非叶子节点区分====================================================================================================================================================
+
+let $all := $c//*
+ let $_ := 
+   for $child in $all
+     let $_ := if(fn:count($child/*) eq  0) then
+                ()
+             else                  let $_ :=''
+             return $child
+     return $_
+===========================================================map赋值和清空===================================================================================================================================================
+	 
+let $ret-data := json:object()    
+let $_ := map:put($ret-data, 'elem', json:array())
+let $_ := map:get($ret-data, "elem")
+let $x := json:array-push($_, '$comment-obj')
+let $x := json:array-push($_, '$comment-obj2')
+
+let $_ := map:clear($ret-data)
+
+
+let $_ := map:put($ret-data, 'elem', json:array())
+let $_ := map:get($ret-data, "elem")
+let $x := json:array-push($_, '$comment-obj3')
+let $x := json:array-push($_, '$comment-obj4')
+
+
+return   $ret-data
+===========================================================更新map array中的内容===============================================================================================================================================
+let $test := json:object()
+let $_ := map:put($test, 'test', json:array())
+let $obj := json:object()
+let $_ := map:put($obj, "test1", "1")
+let $_ := map:put($obj, "test2", "2")
+let $_ := map:get($test, "test")
+let $_ := json:array-push($_, $obj)
+let $_ := 
+  for $i in 1 to fn:count(map:get($test,'test'))
+    let $xx := json:object()
+    let $_ := map:put($xx, "test3", '3')
+    let $_ := map:put($xx, "test4", '4')
+    let $_ :=  json:set-item-at(map:get($test,'test'),1,$xx)
+  return ()

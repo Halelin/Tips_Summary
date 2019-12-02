@@ -1,0 +1,79 @@
+PREFIX dcterms:<http://purl.org/dc/terms/>
+PREFIX  experiment:<http://www.murata.com/webrider/resource_part/experiment/>
+PREFIX   process:<http://www.murata.com/webrider/resource_part/process/>
+
+SELECT ?from ?to
+ where{
+  ?from dcterms:isPartOf   ?to                  
+                    }
+					
+					
+xquery version "1.0-ml";
+import module namespace sem = "http://marklogic.com/semantics" at "/MarkLogic/semantics.xqy";
+let $result :=
+      sem:sparql('
+PREFIX dcterms:<http://purl.org/dc/terms/>
+PREFIX  experiment:<http://www.murata.com/webrider/resource_part/experiment/>
+PREFIX   process:<http://www.murata.com/webrider/resource_part/process/>
+
+SELECT ?from ?to
+ where{
+  ?from dcterms:isPartOf   ?to                  
+                    }
+      ')
+for $from-to in $result
+return element from-to {element from { map:get($from-to, "from")}, element to {map:get($from-to, "to")}}
+
+字符串拆分
+fn:tokenize("http://www.murata.com/webrider/resource_part/experiment/12345", "/")[last()]
+
+
+xquery version "1.0-ml";
+import module namespace sem = "http://marklogic.com/semantics" at "/MarkLogic/semantics.xqy";
+let $result :=
+      sem:sparql('
+PREFIX dcterms:<http://purl.org/dc/terms/>
+PREFIX  experiment:<http://www.murata.com/webrider/resource_part/experiment/>
+PREFIX   process:<http://www.murata.com/webrider/resource_part/process/>
+
+SELECT ?from ?to
+ where{
+  ?from dcterms:isPartOf   ?to                  
+                    }
+      ')
+for $from-to in $result
+let $x :=  element edages {
+element from { 
+element id {fn:tokenize(map:get($from-to, "from"), "/")[last()]} , 
+element label {'asdf'}}, 
+element to {map:get($from-to, "to")
+}}
+for $edage in $x 
+return element xxx {$edage }
+
+
+===============================
+xquery version "1.0-ml";
+let $query := cts:word-query("20190916120133503")
+let $result := cts:search(doc(), cts:and-query((cts:directory-query('/resource_part/process_group/'), $query)))
+return $result
+===========XQUERY====================
+fn:doc("/resource_part/eventlog/20190917151736_admin.xml")
+
+=======================================from to 第一版=====================================================
+xquery version "1.0-ml";
+import module namespace sem = "http://marklogic.com/semantics" at "/MarkLogic/semantics.xqy";
+sem:sparql('
+    PREFIX cts: <http://marklogic.com/cts#>
+    PREFIX rdfs: <http://www.w3.org/TR/rdf-schema/>
+    select * where 
+        {
+           ?s <http://purl.org/dc/terms/isPartOf> ?o
+           {  select * where
+              {
+                  ?s <http://purl.org/dc/terms/isPartOf> + <http://www.murata.com/webrider/resource_part/experiment/12345>
+              }
+           }
+        }')
+============================================================================================
+

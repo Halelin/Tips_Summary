@@ -1,0 +1,4 @@
+show global variables like 'sync_binlog';
+show global variables like 'innodb_flush_log_at_trx_commit';
+set GLOBAL sync_binlog=0;
+set GLOBAL innodb_flush_log_at_trx_commit=100;

@@ -1,0 +1,32 @@
+YK95 1.连接的关闭在mainbean,使用closeDB方法
+11.stringBuffer append拆分内部String +
+4.返回值fail ,success改为布尔类型
+8.error 发生直接返回，不用设置为null
+9."".equals使用cmStringUtil
+
+
+
+6.加log
+10.js中方法缩进，花括号对齐
+
+
+
+5.冗余代码删除 换行 空格
+12.try catch包裹范围扩大。
+3.代码缩进4格
+2.变量名开头加小写m 
+13.所有变量均需要赋初始值 null 或者为其他值。
+7.try catch ,if else注释，不要换行，
+
+
+站master 共通sql
+code 165 185 166 共通sql 承认未承认状态
+
+
+e.printStackTrace(); 使用log替换
+
+
+new Date()一致性
+
+gradle精简化
+

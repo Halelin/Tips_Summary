@@ -1,0 +1,137 @@
+C:\Users\111\.gradle\caches\modules-2\files-2.1\com.marklogic\marklogic-client-api\4.2.0
+D:\projectFile\marklogic\murata-smalab2020\trunk\200.要件定義\100.検討資料\ワイヤー
+
+根域名：winServer.cn
+目录服务还原模式(DSRM)密码：DSRM77^ZLL
+
+nltest /dsgetdc:ad.com /force
+
+windows2016 admin win77^ZLL
+
+postman
+241……@……
+postmanzl77
+postman771229zlZLL
+
+
+markLogic 官网
+241^@^
+markLogic!77
+
+marklogic web console
+marklogic marklogic
+
+zltest@163.com zltest
+
+zhiwang
+QQ zhiwang77^9
+
+w3c7712^zl^
+halelin  7712^zl^  git
+
+MiniApp
+SECRET
+b8b0df39f493554a57ad149ceb41d2f9 
+appid
+wx73f98cc9f35ba77d
+
+QQ hulian
+APP ID  1107936806
+APP KEY  duneU94IDpj9Hjd8
+
+
+ORACLE
+zhoujoy^...
+oracle77..zl..
+
+enterprisemail
+zhoulin@littlegarden.com.cn little77^
+
+241^@ 7712^zl^
+openweixin
+zhoujoy^@ wx7712^zl^
+
+https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=wx73f98cc9f35ba77d&secret=b8b0df39f493554a57ad149ceb41d2f9
+返回值：
+{"access_token":"13_6ZXqpnKZ05p4HxR_8HV4QlmC3lP3Un-h8rxqMx53nQPb2qv4xwLPv5lP0KW7zd773FY3yeNgCEroocrgU8QRGEMDTv7X0sr4PQBEkcsv49p9IFraqkRAAdFrhOdpSYTvOakt5vUfIoT1UIMvJPDbAFAVBP","expires_in":7200}
+
+
+创建用户表：
+create table userWx(
+	id int(50) primary key not null,
+	nickname varchar(20) not null,
+	registedate timestamp not null
+);
+
+insert into userWx values('xxx','mike',now());
+
+
+openid: "ozvgM5DaEB3slX2gr_myVfbsois4"
+开发者服务器使用登录凭证 code 获取 session_key 和 openid
+https://api.weixin.qq.com/sns/jscode2session?appid=APPID&secret=SECRET&js_code=JSCODE&grant_type=authorization_code
+https://api.weixin.qq.com/sns/jscode2session?appid=wx73f98cc9f35ba77d&secret=b8b0df39f493554a57ad149ceb41d2f9&js_code=0814umNV09YYEV1CMsOV0q6yNV04umNc&grant_type=authorization_code
+请求参数：
+参数	必填	说明
+appid	是	小程序唯一标识
+secret	是	小程序的 app secret
+js_code	是	登录时获取的 code
+grant_type	是	填写为 authorization_code
+返回参数：
+参数	说明
+openid	用户唯一标识
+session_key	会话密钥
+unionid	用户在开放平台的唯一标识符。本字段在满足一定条件的情况下才返回。具体参看UnionID机制说明
+
+
+
+
+
+@Controller
+@RequestMapping("/main")
+public class HomeController {
+	@RequestMapping("/toHome")
+	public String toHome(){
+		return "my";
+	}
+
+}
+create table teacher(
+	id int(8) primary key auto_increment,
+	name varchar(20),
+	password varchar(20)	
+);
+insert into teacher values(null,'jack','1234');
+insert into teacher values(null,'','1234');
+
+
+  <servlet-mapping>     
+    <servlet-name>default</servlet-name>    
+    <url-pattern>*.jpg</url-pattern>       
+</servlet-mapping> 
+ <servlet-mapping>     
+    <servlet-name>default</servlet-name>    
+    <url-pattern>*.mp4</url-pattern>       
+</servlet-mapping>
+ <servlet-mapping>     
+    <servlet-name>default</servlet-name>    
+    <url-pattern>*.png</url-pattern>       
+</servlet-mapping>       
+<servlet-mapping>         
+    <servlet-name>default</servlet-name>      
+    <url-pattern>*.js</url-pattern>      
+</servlet-mapping>      
+<servlet-mapping>          
+    <servlet-name>default</servlet-name>         
+    <url-pattern>*.css</url-pattern>        
+</servlet-mapping> 
+ 
+	
+https://api.it120.cc    mall
+ https://we.cqu.pt  
+https://wxapi.hotapp.cn  miemie
+http://gank.io 
+https://www.v2ex.com  
+
+未添加
+https://api.shanbay.com
+
